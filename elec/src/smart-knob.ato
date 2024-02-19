@@ -1,2 +1,76 @@
+import ESP32S3 from "esp32-s3.ato"
+import USBCConn from "usb-connectors.ato"
+import AMS111733 from "ams1117-33.ato"
+import VEML7700 from "veml7700.ato"
+import HX711 from "hx711.ato"
+import SN74LV1T34 from "sn74lvt34.ato"
+import SK6805EC20 from "sk6805-ec20.ato"
+import DRV8300 from "drv8300.ato"
+
 module SmartKnob:
-    signal gnd
+    base = new SmartKnobBase
+    screen = new SmartKnobScreen
+
+module SmartKnobBase:
+    usbc = new USBCConn
+    ldo3V3 = new AMS111733
+    esp32s3 = new ESP32S3
+
+    # POWER CONNECTIONS
+    usbc.power ~ ldo.power_in
+    ldo.power_out ~ esp32s3.power
+    power_batt = new Power #2s 
+
+    # USB
+    esp32s3.usb2 ~ uscc.usb2
+
+    # STRAIN GUAGE
+    strain_adc = new HX711
+    strain_adc.clock ~ esp32.IO2
+    strain_adc.data ~ esp32.IO38
+
+    # AMBIENT LIGHT
+    light_sensor = new VEML7700
+    light_sensor.i2c.scl ~ esp32s3.IO8
+    light_sensor.i2c.sda ~ esp32s3.IO15
+
+    # MAGNETIC ENCODER
+    mag_encoder = new MT6701
+    mag_encoder.power ~ usbc.power
+    mag_encoder.ssi.do ~ esp32s3.IO37
+    mag_encoder.ssi.clk ~ esp32s3.IO13
+    mag_encoder.ssi.csn ~ esp32.IO14
+
+    # BLDC CONTROLLER
+    power_stage = new DRV8300
+
+    power_stage.power_batt ~ usbc
+    power_stage.power_gate ~
+    power_stage.power_vref = ~
+    power_stage.enable.io ~
+
+    power_stage.phase_a ~
+    power_stage.phase_b ~
+    power_stage.phase_c ~
+
+    # LEVEL SHIFTER
+    shifter = new SN74LV1T34
+    shifter.input ~ esp32s3.IO7
+
+    # LEDS
+    led1 = new SK6805EC20
+    led2 = new SK6805EC20
+    led3 = new SK6805EC20
+    led4 = new SK6805EC20
+    led5 = new SK6805EC20
+    led6 = new SK6805EC20
+    led7 = new SK6805EC20
+    led8 = new SK6805EC20
+    led9 = new SK6805EC20
+    led10 = new SK6805EC20
+
+    led1.power ~ usbc.power;led2.power ~ usbc.power;led3.power ~ usbc.power;led4.power ~ usbc.power;led5.power ~ usbc.power;led6.power ~ usbc.power;led7.power ~ usbc.power;led8.power ~ usbc.power;led9.power ~ usbc.power;led10.power ~ usbc.power;
+
+    
+
+module SmartKnobScreen

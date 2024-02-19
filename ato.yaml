@@ -4,3 +4,10 @@ builds:
     entry: elec/src/smart-knob.ato:SmartKnob
 dependencies:
 - generics
+- usb-connectors^v2.0.2
+- regulators^2.0.5
+- hx711^v0.0.1
+- ams1117-33
+- esp32-s3^v0.0.1
+- sk6805-ec20
+- drv8300
