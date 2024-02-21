@@ -6,6 +6,8 @@ import HX711 from "hx711.ato"
 import SN74LV1T34 from "sn74lvt34.ato"
 import SK6805EC20 from "sk6805-ec20.ato"
 import DRV8300 from "drv8300.ato"
+import DiffPair from "generics/interfaces.ato"
+import VDiv from "generics/vdivs.ato"
 
 module SmartKnob:
     base = new SmartKnobBase
@@ -23,11 +25,6 @@ module SmartKnobBase:
 
     # USB
     esp32s3.usb2 ~ uscc.usb2
-
-    # STRAIN GUAGE
-    strain_adc = new HX711
-    strain_adc.clock ~ esp32.IO2
-    strain_adc.data ~ esp32.IO38
 
     # AMBIENT LIGHT
     light_sensor = new VEML7700
@@ -53,6 +50,36 @@ module SmartKnobBase:
     power_stage.phase_b ~
     power_stage.phase_c ~
 
+    power_stage.phase_a.gate_low
+
+    # STRAIN SENSOR
+    ## Resistor Wheatstone Bridge
+    strain_force = new Power
+    strain_sense = new DiffPair
+    wsr11 = new Resistor
+    wsr12 = new Resistor
+    wsr21 = new Resistor
+    wsr22 = new Resistor
+    wsr11.value = 360ohm +/- 1%
+    wsr12.value = 360ohm +/- 1%
+    wsr21.value = 360ohm +/- 1%
+    wsr22.value = 360ohm +/- 1%
+
+    strain_force.vcc ~ wsr11.p1; strain_force.vcc ~ wsr12.p1
+    strain_force.gnd ~ wsr21.p2; strain_force.gnd ~ wsr22.p1
+
+    strain_sense.p ~ wsr11.p2; strain_sense.p ~ wsr21.p1
+    strain_sense.n ~ wsr12.p2; strain_sense.n ~ wsr22.p1
+
+    # STRAIN GUAGE
+    strain_adc = new HX711
+    strain_adc.clock ~ esp32.IO2
+    strain_adc.data ~ esp32.IO38
+
+    strain_adc.power ~ ldo.power_out
+    strain_adc.force ~ strain_force
+    strain_adc.sense_a ~ strain_sense
+
     # LEVEL SHIFTER
     shifter = new SN74LV1T34
     shifter.input ~ esp32s3.IO7
@@ -70,7 +97,40 @@ module SmartKnobBase:
     led10 = new SK6805EC20
 
     led1.power ~ usbc.power;led2.power ~ usbc.power;led3.power ~ usbc.power;led4.power ~ usbc.power;led5.power ~ usbc.power;led6.power ~ usbc.power;led7.power ~ usbc.power;led8.power ~ usbc.power;led9.power ~ usbc.power;led10.power ~ usbc.power;
-
     
+    # LCD CONNECTOR
 
 module SmartKnobScreen
+    lcd_power = new Power
+
+    # COMMS SIGNALS
+    signal DC
+    signal nCS
+    signal SCK
+    signal MOSI
+    signal nRESET
+    
+    # BACKLIGHT ENABLE FET/BALLAST RESISTOR
+    signal backlight_en
+    signal led_a
+    signal led_k
+    led_fet = new 2N7002 #TODO: ADD THIS COMPONENT
+    gate_div = new VDiv
+    gate_div.r_top.value = 10kohm +/- 5%
+    gate_div.r_bottom.value = 1Mohm +/- 5%
+    gate_div.top ~ lcd_power.vcc
+    gate_div.out ~ led_fet.gate
+    gate_div.bottom ~ lcd_power.gnd
+    led_fet.drain ~ led_k
+    led_fet.source ~ lcd_power.gnd
+    r_ballast = new resistor
+    r_ballast.value = 22ohm +/- 5%
+    r_ballast.package = "0603"
+    r_ballast.p1 ~ lcd_power.vcc
+    r_ballast.p2 ~ led_a
+    
+    # INPUT CAPS
+    input_cap1 = new Capacitor
+    input_cap2 = new Capacitor
+    input_cap1.value = 22uF +/- 20%
+    input_cap2.value = 100nF +/- 20%
