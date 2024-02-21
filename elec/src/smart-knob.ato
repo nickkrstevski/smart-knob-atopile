@@ -97,6 +97,7 @@ module SmartKnobBase:
     led10 = new SK6805EC20
 
     led1.power ~ usbc.power;led2.power ~ usbc.power;led3.power ~ usbc.power;led4.power ~ usbc.power;led5.power ~ usbc.power;led6.power ~ usbc.power;led7.power ~ usbc.power;led8.power ~ usbc.power;led9.power ~ usbc.power;led10.power ~ usbc.power;
+    led1.dout~led2.din;led2.dout~led3.din;led3.dout~led4.din;led4.dout~led5.din;led5.dout~led6.din;led6.dout~led7.din;led7.dout~led8.din;led8.dout~led9.din;led9.dout~led10.din
     
     # LCD CONNECTOR
 
