@@ -1,11 +1,11 @@
-import ESP32S3 from "esp32-s3.ato"
-import USBCConn from "usb-connectors.ato"
-import AMS111733 from "ams1117-33.ato"
-import VEML7700 from "veml7700.ato"
-import HX711 from "hx711.ato"
-import SN74LV1T34 from "sn74lvt34.ato"
-import SK6805EC20 from "sk6805-ec20.ato"
-import DRV8300 from "drv8300.ato"
+import ESP32S3 from "esp32-s3/esp32-s3.ato"
+import USBCConn from "usb-connectors/usb-connectors.ato"
+import AMS111733 from "ams1117-33/elec/src/ams1117-33.ato"
+import VEML7700 from "veml7700/elec/src/veml7700.ato"
+import HX711 from "hx711/elec/src/hx711.ato"
+import SN74LV1T34 from "sn74lv1t34/elec/src/sn74lv1t34.ato"
+import SK6805EC20 from "sk6805-ec20/elec/src/sk6805-ec20.ato"
+import DRV8300 from "drv8300/elec/src/drv8300.ato"
 import DiffPair from "generics/interfaces.ato"
 import VDiv from "generics/vdivs.ato"
 
@@ -42,15 +42,15 @@ module SmartKnobBase:
     power_stage = new DRV8300
 
     power_stage.power_batt ~ usbc
-    power_stage.power_gate ~
-    power_stage.power_vref = ~
-    power_stage.enable.io ~
+    # power_stage.power_gate ~
+    # power_stage.power_vref = ~
+    # power_stage.enable.io ~
 
-    power_stage.phase_a ~
-    power_stage.phase_b ~
-    power_stage.phase_c ~
+    # power_stage.phase_a ~
+    # power_stage.phase_b ~
+    # power_stage.phase_c ~
 
-    power_stage.phase_a.gate_low
+    # power_stage.phase_a.gate_low
 
     # STRAIN SENSOR
     ## Resistor Wheatstone Bridge
@@ -101,7 +101,7 @@ module SmartKnobBase:
     
     # LCD CONNECTOR
 
-module SmartKnobScreen
+module SmartKnobScreen:
     lcd_power = new Power
 
     # COMMS SIGNALS
@@ -115,15 +115,15 @@ module SmartKnobScreen
     signal backlight_en
     signal led_a
     signal led_k
-    led_fet = new 2N7002 #TODO: ADD THIS COMPONENT
+    # led_fet = new 2N7002 #TODO: ADD THIS COMPONENT
     gate_div = new VDiv
     gate_div.r_top.value = 10kohm +/- 5%
     gate_div.r_bottom.value = 1Mohm +/- 5%
     gate_div.top ~ lcd_power.vcc
-    gate_div.out ~ led_fet.gate
+    # gate_div.out ~ led_fet.gate
     gate_div.bottom ~ lcd_power.gnd
-    led_fet.drain ~ led_k
-    led_fet.source ~ lcd_power.gnd
+    # led_fet.drain ~ led_k
+    # led_fet.source ~ lcd_power.gnd
     r_ballast = new resistor
     r_ballast.value = 22ohm +/- 5%
     r_ballast.package = "0603"
