@@ -1,13 +1,18 @@
-import ESP32S3 from "esp32-s3/esp32-s3.ato"
-import USBCConn from "usb-connectors/usb-connectors.ato"
-import AMS111733 from "ams1117-33/elec/src/ams1117-33.ato"
-import VEML7700 from "veml7700/elec/src/veml7700.ato"
-import HX711 from "hx711/elec/src/hx711.ato"
-import SN74LV1T34 from "sn74lv1t34/elec/src/sn74lv1t34.ato"
-import SK6805EC20 from "sk6805-ec20/elec/src/sk6805-ec20.ato"
-import DRV8300 from "drv8300/elec/src/drv8300.ato"
-import DiffPair from "generics/interfaces.ato"
-import VDiv from "generics/vdivs.ato"
+import ESP32S3      from "esp32-s3/esp32-s3.ato"
+import USBCConn     from "usb-connectors/usb-connectors.ato"
+import AMS111733    from "ams1117-33/elec/src/ams1117-33.ato"
+import VEML7700     from "veml7700/elec/src/veml7700.ato"
+import HX711        from "hx711/elec/src/hx711.ato"
+import SN74LV1T34   from "sn74lv1t34/elec/src/sn74lv1t34.ato"
+import SK6805EC20   from "sk6805-ec20/elec/src/sk6805-ec20.ato"
+import DRV8300      from "drv8300/elec/src/drv8300.ato"
+import MT6701       from "mt6701/elec/src/mt6701.ato"
+
+import DiffPair     from "generics/interfaces.ato"
+import VDiv         from "generics/vdivs.ato"
+import Power        from "generics/interfaces.ato"
+import Resistor     from "generics/resistors.ato"
+import Capacitor    from "generics/capacitors.ato"
 
 module SmartKnob:
     base = new SmartKnobBase
@@ -19,38 +24,38 @@ module SmartKnobBase:
     esp32s3 = new ESP32S3
 
     # POWER CONNECTIONS
-    usbc.power ~ ldo.power_in
-    ldo.power_out ~ esp32s3.power
-    power_batt = new Power #2s 
+    usbc.power ~ ldo3V3.power_in
+    ldo3V3.power_out ~ esp32s3.power
+    power_batt = new Power #2s
 
     # USB
-    esp32s3.usb2 ~ uscc.usb2
+    esp32s3.usb2 ~ usbc.usb2
 
     # AMBIENT LIGHT
     light_sensor = new VEML7700
-    light_sensor.i2c.scl ~ esp32s3.IO8
-    light_sensor.i2c.sda ~ esp32s3.IO15
+    light_sensor.i2c.scl ~ esp32s3.ic.IO8
+    light_sensor.i2c.sda ~ esp32s3.ic.IO15
 
     # MAGNETIC ENCODER
     mag_encoder = new MT6701
     mag_encoder.power ~ usbc.power
-    mag_encoder.ssi.do ~ esp32s3.IO37
-    mag_encoder.ssi.clk ~ esp32s3.IO13
-    mag_encoder.ssi.csn ~ esp32.IO14
+    mag_encoder.ssi.do ~ esp32s3.ic.IO37
+    mag_encoder.ssi.clk ~ esp32s3.ic.IO13
+    mag_encoder.ssi.csn ~ esp32s3.ic.IO14
 
     # BLDC CONTROLLER
     power_stage = new DRV8300
 
-    power_stage.power_batt ~ usbc
-    # power_stage.power_gate ~
-    # power_stage.power_vref = ~
-    # power_stage.enable.io ~
+    # # power_stage.power_batt ~ usbc
+    # # power_stage.power_gate ~
+    # # power_stage.power_vref = ~
+    # # power_stage.enable.ic.io ~
 
-    # power_stage.phase_a ~
-    # power_stage.phase_b ~
-    # power_stage.phase_c ~
+    # # power_stage.phase_a ~
+    # # power_stage.phase_b ~
+    # # power_stage.phase_c ~
 
-    # power_stage.phase_a.gate_low
+    # # power_stage.phase_a.gate_low
 
     # STRAIN SENSOR
     ## Resistor Wheatstone Bridge
@@ -60,10 +65,10 @@ module SmartKnobBase:
     wsr12 = new Resistor
     wsr21 = new Resistor
     wsr22 = new Resistor
-    wsr11.value = 360ohm +/- 1%
-    wsr12.value = 360ohm +/- 1%
-    wsr21.value = 360ohm +/- 1%
-    wsr22.value = 360ohm +/- 1%
+    wsr11.value = 360ohm +/- 5% #TODO: Would use tighter tolerance if available
+    wsr12.value = 360ohm +/- 5%
+    wsr21.value = 360ohm +/- 5%
+    wsr22.value = 360ohm +/- 5%
 
     strain_force.vcc ~ wsr11.p1; strain_force.vcc ~ wsr12.p1
     strain_force.gnd ~ wsr21.p2; strain_force.gnd ~ wsr22.p1
@@ -73,16 +78,16 @@ module SmartKnobBase:
 
     # STRAIN GUAGE
     strain_adc = new HX711
-    strain_adc.clock ~ esp32.IO2
-    strain_adc.data ~ esp32.IO38
+    strain_adc.clock ~ esp32s3.ic.IO2
+    strain_adc.data ~ esp32s3.ic.IO38
 
-    strain_adc.power ~ ldo.power_out
+    strain_adc.power ~ ldo3V3.power_out
     strain_adc.force ~ strain_force
     strain_adc.sense_a ~ strain_sense
 
     # LEVEL SHIFTER
     shifter = new SN74LV1T34
-    shifter.input ~ esp32s3.IO7
+    shifter.input ~ esp32s3.ic.IO7
 
     # LEDS
     led1 = new SK6805EC20
@@ -124,7 +129,7 @@ module SmartKnobScreen:
     gate_div.bottom ~ lcd_power.gnd
     # led_fet.drain ~ led_k
     # led_fet.source ~ lcd_power.gnd
-    r_ballast = new resistor
+    r_ballast = new Resistor
     r_ballast.value = 22ohm +/- 5%
     r_ballast.package = "0603"
     r_ballast.p1 ~ lcd_power.vcc
