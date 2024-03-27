@@ -1,0 +1,10 @@
+component CJ2310:
+    # component CJ2310
+    footprint = "SOT-23-3_L2.9-W1.6-P1.90-LS2.8-BR"
+    lcsc_id = "C75882"
+    mpn = "C75882"
+    # pins
+    signal D ~ pin 3
+    signal G ~ pin 1
+    signal S ~ pin 2
+

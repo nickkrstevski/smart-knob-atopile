@@ -2,6 +2,10 @@ ato-version: ^0.2.0
 builds:
   default:
     entry: elec/src/smart-knob.ato:SmartKnob
+  base:
+    entry: elec/src/smart-knob.ato:SmartKnobBase
+  screen:
+    entry: elec/src/smart-knob.ato:SmartKnobScreen
 dependencies:
 - generics
 - usb-connectors^v2.0.2

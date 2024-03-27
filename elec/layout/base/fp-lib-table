@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "lib")(type "KiCad")(uri "/Users/nickk/projects/chess-clock/.ato/modules/smart-knob/build/footprints/footprints.pretty")(options "")(descr ""))
+)

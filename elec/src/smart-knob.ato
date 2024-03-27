@@ -9,11 +9,11 @@ import DRV8300      from "drv8300/elec/src/drv8300.ato"
 import MT6701       from "mt6701/elec/src/mt6701.ato"
 
 import DiffPair     from "generics/interfaces.ato"
+import Pair         from "generics/interfaces.ato"
 import VDiv         from "generics/vdivs.ato"
 import Power        from "generics/interfaces.ato"
 import Resistor     from "generics/resistors.ato"
 import Capacitor    from "generics/capacitors.ato"
-import HalfBridge   from "generics/mosfets.ato"
 
 module SmartKnob:
     base = new SmartKnobBase
@@ -28,6 +28,11 @@ module SmartKnobBase:
     usbc.power ~ ldo3V3.power_in
     ldo3V3.power_out ~ esp32s3.power
     power_batt = new Power #2s
+    
+    # BLDC CONNECTIONS
+    signal phase_a
+    signal phase_b
+    signal phase_c
 
     # USB
     esp32s3.usb2 ~ usbc.usb2
@@ -58,9 +63,24 @@ module SmartKnobBase:
     power_stage.input_high_c.io ~ esp32s3.ic.IO16
 
     ## OUTPUTS
-    hba = HalfBridge
-
-
+    hba = new HalfBridgeNMOS
+    hba.power ~ power_batt
+    hba.gate_high ~ power_stage.output_high_a.io
+    hba.gate_low ~ power_stage.output_low_a.io
+    hba.output.io ~ phase_a
+    hba.shunt.value = 1ohm +/- 1%
+    hbb = new HalfBridgeNMOS
+    hbb.power ~ power_batt
+    hbb.gate_high ~ power_stage.output_high_b.io
+    hbb.gate_low ~ power_stage.output_low_b.io
+    hbb.output.io ~ phase_b
+    hbb.shunt.value = 1ohm +/- 1%
+    hbc = new HalfBridgeNMOS
+    hbc.power ~ power_batt
+    hbc.gate_high ~ power_stage.output_high_c.io
+    hbc.gate_low ~ power_stage.output_low_c.io
+    hbc.output.io ~ phase_c
+    hbc.shunt.value = 1ohm +/- 1%
 
     # STRAIN SENSOR
     ## Resistor Wheatstone Bridge
@@ -70,10 +90,14 @@ module SmartKnobBase:
     wsr12 = new Resistor
     wsr21 = new Resistor
     wsr22 = new Resistor
-    wsr11.value = 360ohm +/- 5% #TODO: Would use tighter tolerance if available
-    wsr12.value = 360ohm +/- 5%
-    wsr21.value = 360ohm +/- 5%
-    wsr22.value = 360ohm +/- 5%
+    wsr11.value = 330ohm +/- 5% #TODO: Would use tighter tolerance if available
+    wsr11.package = "2512"
+    wsr12.value = 330ohm +/- 5%
+    wsr12.package = "2512"
+    wsr21.value = 330ohm +/- 5%
+    wsr21.package = "2512"
+    wsr22.value = 330ohm +/- 5%
+    wsr22.package = "2512"
 
     strain_force.vcc ~ wsr11.p1; strain_force.vcc ~ wsr12.p1
     strain_force.gnd ~ wsr21.p2; strain_force.gnd ~ wsr22.p1
@@ -125,15 +149,18 @@ module SmartKnobScreen:
     signal backlight_en
     signal led_a
     signal led_k
-    # led_fet = new 2N7002 #TODO: ADD THIS COMPONENT
+    led_fet = new _2N7002
     gate_div = new VDiv
+    
     gate_div.r_top.value = 10kohm +/- 5%
     gate_div.r_bottom.value = 1Mohm +/- 5%
-    gate_div.top ~ lcd_power.vcc
-    # gate_div.out ~ led_fet.gate
+    gate_div.top ~ backlight_en
+    gate_div.out ~ led_fet.gate
     gate_div.bottom ~ lcd_power.gnd
-    # led_fet.drain ~ led_k
-    # led_fet.source ~ lcd_power.gnd
+
+    led_fet.drain ~ led_k
+    led_fet.source ~ lcd_power.gnd
+
     r_ballast = new Resistor
     r_ballast.value = 22ohm +/- 5%
     r_ballast.package = "0603"
@@ -143,5 +170,54 @@ module SmartKnobScreen:
     # INPUT CAPS
     input_cap1 = new Capacitor
     input_cap2 = new Capacitor
+    input_cap1.power ~ lcd_power
+    input_cap2.power ~ lcd_power
     input_cap1.value = 22uF +/- 20%
+    input_cap1.package = "1206"
     input_cap2.value = 100nF +/- 20%
+    input_cap2.package = "0603"
+
+module HalfBridgeNMOS:
+    power = new Power
+    output = new Pair
+    shunt_output = new DiffPair
+    signal gate_high
+    signal gate_low
+
+    # Components
+    nfet_high = new CJ2310
+    nfet_low = new CJ2310
+    shunt = new Resistor
+
+    # Connect power
+    power.vcc ~ nfet_high.drain
+    output.io ~ nfet_high.source
+    output.io ~ nfet_low.drain
+    power.gnd ~ shunt.p2; shunt.p1 ~ nfet_low.source
+
+    # Connect the gates
+    gate_high ~ nfet_high.gate
+    gate_low ~ nfet_low.gate
+
+    # Connect the gnds
+    output.gnd ~ power.gnd
+
+component CJ2310:
+    # component CJ2310
+    footprint = "SOT-23-3_L2.9-W1.6-P1.90-LS2.8-BR"
+    lcsc_id = "C75882"
+    mpn = "C75882"
+    # pins
+    signal drain ~ pin 3
+    signal gate ~ pin 1
+    signal source ~ pin 2
+
+component _2N7002:
+    # component 2N7002
+    footprint = "SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BR"
+    lcsc_id = "C8545"
+    mpn = "C8545"
+    # pins
+    signal drain ~ pin 3
+    signal gate ~ pin 1
+    signal source ~ pin 2

@@ -181,7 +181,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "smart-knob.kicad_pro",
+    "filename": "smart-knob-screen.kicad_pro",
     "version": 1
   },
   "net_settings": {
@@ -215,7 +215,7 @@
     "last_paths": {
       "gencad": "",
       "idf": "",
-      "netlist": "../../../build/base.net",
+      "netlist": "../../../build/screen.net",
       "specctra_dsn": "",
       "step": "",
       "vrml": ""
