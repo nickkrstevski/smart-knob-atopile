@@ -4,7 +4,7 @@ import AMS111733    from "ams1117-33/elec/src/ams1117-33.ato"
 import VEML7700     from "veml7700/elec/src/veml7700.ato"
 import HX711        from "hx711/elec/src/hx711.ato"
 import SN74LV1T34   from "sn74lv1t34/elec/src/sn74lv1t34.ato"
-import SK6805EC20   from "sk6805-ec20/elec/src/sk6805-ec20.ato"
+import SK6805SIDE   from "sk6805side/elec/src/sk6805side.ato"
 import DRV8300      from "drv8300/elec/src/drv8300.ato"
 import MT6701       from "mt6701/elec/src/mt6701.ato"
 
@@ -100,7 +100,7 @@ module SmartKnobBase:
     wsr22.package = "2512"
 
     strain_force.vcc ~ wsr11.p1; strain_force.vcc ~ wsr12.p1
-    strain_force.gnd ~ wsr21.p2; strain_force.gnd ~ wsr22.p1
+    strain_force.gnd ~ wsr21.p2; strain_force.gnd ~ wsr22.p2
 
     strain_sense.p ~ wsr11.p2; strain_sense.p ~ wsr21.p1
     strain_sense.n ~ wsr12.p2; strain_sense.n ~ wsr22.p1
@@ -117,21 +117,22 @@ module SmartKnobBase:
     # LEVEL SHIFTER
     shifter = new SN74LV1T34
     shifter.input ~ esp32s3.ic.IO7
+    shifter.power ~ usbc.power
 
     # LEDS
-    led1 = new SK6805EC20
-    led2 = new SK6805EC20
-    led3 = new SK6805EC20
-    led4 = new SK6805EC20
-    led5 = new SK6805EC20
-    led6 = new SK6805EC20
-    led7 = new SK6805EC20
-    led8 = new SK6805EC20
-    led9 = new SK6805EC20
-    led10 = new SK6805EC20
+    led1 = new SK6805SIDE
+    led2 = new SK6805SIDE
+    led3 = new SK6805SIDE
+    led4 = new SK6805SIDE
+    led5 = new SK6805SIDE
+    led6 = new SK6805SIDE
+    led7 = new SK6805SIDE
+    led8 = new SK6805SIDE
+    led9 = new SK6805SIDE
+    led10 = new SK6805SIDE
 
     led1.power ~ usbc.power;led2.power ~ usbc.power;led3.power ~ usbc.power;led4.power ~ usbc.power;led5.power ~ usbc.power;led6.power ~ usbc.power;led7.power ~ usbc.power;led8.power ~ usbc.power;led9.power ~ usbc.power;led10.power ~ usbc.power;
-    led1.dout~led2.din;led2.dout~led3.din;led3.dout~led4.din;led4.dout~led5.din;led5.dout~led6.din;led6.dout~led7.din;led7.dout~led8.din;led8.dout~led9.din;led9.dout~led10.din
+    led1.data_out~led2.data_in;led2.data_out~led3.data_in;led3.data_out~led4.data_in;led4.data_out~led5.data_in;led5.data_out~led6.data_in;led6.data_out~led7.data_in;led7.data_out~led8.data_in;led8.data_out~led9.data_in;led9.data_out~led10.data_in
     
     #TODO: LCD CONNECTOR
 
