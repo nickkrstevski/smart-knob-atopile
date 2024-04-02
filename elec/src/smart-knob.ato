@@ -10,7 +10,7 @@ import MT6701       from "mt6701/elec/src/mt6701.ato"
 
 import DiffPair     from "generics/interfaces.ato"
 import Pair         from "generics/interfaces.ato"
-import VDiv         from "generics/vdivs.ato"
+import _VDiv         from "generics/vdivs.ato"
 import Power        from "generics/interfaces.ato"
 import Resistor     from "generics/resistors.ato"
 import Capacitor    from "generics/capacitors.ato"
@@ -55,8 +55,8 @@ module SmartKnobBase:
     power_stage.power_gate ~ usbc.power #TODO: is 5V enough gate drive?
 
     ## CONTROL
-    power_stage.input_low_a.io ~ esp32s3.ic.IO15
-    power_stage.input_high_a.io ~ esp32s3.ic.IO16
+    power_stage.input_low_a.io ~ esp32s3.ic.IO45
+    power_stage.input_high_a.io ~ esp32s3.ic.IO46
     power_stage.input_low_b.io ~ esp32s3.ic.IO17
     power_stage.input_high_b.io ~ esp32s3.ic.IO18
     power_stage.input_low_c.io ~ esp32s3.ic.IO35
@@ -151,7 +151,7 @@ module SmartKnobScreen:
     signal led_a
     signal led_k
     led_fet = new _2N7002
-    gate_div = new VDiv
+    gate_div = new _VDiv
     
     gate_div.r_top.value = 10kohm +/- 5%
     gate_div.r_bottom.value = 1Mohm +/- 5%
